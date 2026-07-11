@@ -48,8 +48,12 @@ supabase/migrations/    # SQL migrations
 ## Build phases
 
 0. ✅ Scaffold & plan — tokens, migrations, AI contract, Supabase helpers
-1. The core loop: player + clickable dual subtitles + real AI word card & sentence panel + save
-2. Learning data: vocabulary/sentence views, AI cache, watch progress
-3. Dashboard & SRS review
-4. Subtitle search, AI modes, per-movie chat, statistics
-5. Idiom detection, honest pronunciation practice, Anki export
+1. ✅ The core loop: player + clickable dual subtitles + real AI word card & streaming sentence panel + save
+2. ✅ Learning data: vocabulary/sentence views, shared `ai_cache`, watch progress + continue watching
+3. ✅ Dashboard (goal / streak / weekly) & SM-2 spaced-repetition review
+4. ✅ Subtitle search (incl. Konjunktiv II / Passiv / Modalpartikel presets), AI mode switcher, per-movie chat, statistics
+5. ✅ Idiom-detection pass over scene cues · Anki export (.tsv) — pronunciation practice stays deferred until we can do it honestly (no fake scores)
+
+## Keyboard shortcuts (player)
+
+Space/K play · ←/→ ±5s · J/L ±10s · R repeat line · S cycle subtitles (DE+EN → DE → EN → off) · E explain current line · &lt;/&gt; speed · M mute · F fullscreen

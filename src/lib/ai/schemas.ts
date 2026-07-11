@@ -131,6 +131,27 @@ export const sentenceExplanationSchema = z.object({
 export type SentenceExplanation = z.infer<typeof sentenceExplanationSchema>;
 
 // ---------------------------------------------------------------------------
+// Idiom detection — a pass over a scene's cues (Phase 5, honest version)
+// ---------------------------------------------------------------------------
+
+export const idiomSchema = z.object({
+  /** The idiom or fixed expression exactly as it appears in the subtitles. */
+  phrase: z.string(),
+  /** What it actually means in English. */
+  meaning: z.string(),
+  /** Word-for-word translation, so the learner sees why it's opaque. */
+  literal: z.string(),
+  /** Register / who uses it. */
+  register: z.string(),
+});
+export type Idiom = z.infer<typeof idiomSchema>;
+
+export const idiomListSchema = z.object({
+  idioms: z.array(idiomSchema).max(12),
+});
+export type IdiomList = z.infer<typeof idiomListSchema>;
+
+// ---------------------------------------------------------------------------
 // Movie chat — streaming conversation with the film's cues as context
 // ---------------------------------------------------------------------------
 

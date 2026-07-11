@@ -44,7 +44,25 @@ export async function updateSession(request: NextRequest) {
   });
 
   // Required: getUser() revalidates the token and triggers cookie refresh.
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { pathname } = request.nextUrl;
+  const isPublic = pathname.startsWith("/login") || pathname.startsWith("/api");
+
+  if (!user && !isPublic) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+  if (user && pathname.startsWith("/login")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
 
   return response;
 }

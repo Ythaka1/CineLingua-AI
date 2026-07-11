@@ -10,7 +10,7 @@ import type { AiMode, CefrLevel, TargetDialect } from "@/lib/ai/schemas";
  * included for `word`, and the sentence text is the input for `sentence`).
  */
 export function buildCacheKey(params: {
-  kind: "word" | "sentence";
+  kind: "word" | "sentence" | "idioms";
   /** For words: `${word}|${context}`. For sentences: the sentence text. */
   input: string;
   mode: AiMode;
