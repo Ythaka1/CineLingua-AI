@@ -1,6 +1,6 @@
-import { AI_MODEL, getAnthropic } from "@/lib/ai/anthropic";
 import { buildCacheKey } from "@/lib/ai/cache-key";
 import { cacheGet, cachePut } from "@/lib/ai/cache";
+import { AI_MODEL, getGemini } from "@/lib/ai/gemini";
 import { sentenceSystemPrompt, sentenceUserPrompt } from "@/lib/ai/prompts";
 import {
   explainSentenceInputSchema,
@@ -45,25 +45,29 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
 
-  const anthropic = getAnthropic();
+  const gemini = getGemini();
   const encoder = new TextEncoder();
   let full = "";
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
-        const messageStream = anthropic.messages.stream({
+        const responseStream = await gemini.models.generateContentStream({
           model: AI_MODEL,
-          max_tokens: 3000,
-          system: sentenceSystemPrompt(input),
-          messages: [{ role: "user", content: sentenceUserPrompt(input) }],
+          contents: sentenceUserPrompt(input),
+          config: {
+            systemInstruction: sentenceSystemPrompt(input),
+            maxOutputTokens: 4096,
+          },
         });
-        messageStream.on("text", (delta) => {
-          full += delta;
-          controller.enqueue(encoder.encode(delta));
-        });
-        const final = await messageStream.finalMessage();
-        if (final.stop_reason !== "refusal" && full.trim().length > 0) {
+        for await (const chunk of responseStream) {
+          const delta = chunk.text;
+          if (delta) {
+            full += delta;
+            controller.enqueue(encoder.encode(delta));
+          }
+        }
+        if (full.trim().length > 0) {
           await cachePut(supabase, key, { markdown: full });
         }
         controller.close();

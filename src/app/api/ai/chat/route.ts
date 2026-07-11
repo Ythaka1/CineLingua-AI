@@ -1,4 +1,4 @@
-import { AI_MODEL, getAnthropic } from "@/lib/ai/anthropic";
+import { AI_MODEL, getGemini } from "@/lib/ai/gemini";
 import { chatSystemPrompt } from "@/lib/ai/prompts";
 import { movieChatInputSchema } from "@/lib/ai/schemas";
 import { createClient } from "@/lib/supabase/server";
@@ -52,25 +52,32 @@ export async function POST(request: Request): Promise<Response> {
     .join("\n");
 
   const encoder = new TextEncoder();
-  const anthropic = getAnthropic();
+  const gemini = getGemini();
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
-        const messageStream = anthropic.messages.stream({
+        const responseStream = await gemini.models.generateContentStream({
           model: AI_MODEL,
-          max_tokens: 1500,
-          system: chatSystemPrompt({
-            cefr: input.cefr,
-            mode: input.mode,
-            dialect: input.dialect,
-            mediaTitle: media.title,
-            surroundingCues,
-          }),
-          messages: input.messages.map((m) => ({ role: m.role, content: m.content })),
+          contents: input.messages.map((m) => ({
+            role: m.role === "assistant" ? "model" : "user",
+            parts: [{ text: m.content }],
+          })),
+          config: {
+            systemInstruction: chatSystemPrompt({
+              cefr: input.cefr,
+              mode: input.mode,
+              dialect: input.dialect,
+              mediaTitle: media.title,
+              surroundingCues,
+            }),
+            maxOutputTokens: 2048,
+          },
         });
-        messageStream.on("text", (delta) => controller.enqueue(encoder.encode(delta)));
-        await messageStream.finalMessage();
+        for await (const chunk of responseStream) {
+          const delta = chunk.text;
+          if (delta) controller.enqueue(encoder.encode(delta));
+        }
         controller.close();
       } catch (err) {
         console.error("[ai] chat stream failed:", err);

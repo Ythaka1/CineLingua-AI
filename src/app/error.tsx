@@ -18,7 +18,7 @@ export default function GlobalError({
       </h1>
       <p className="max-w-md text-sm text-muted">
         {isConfig
-          ? "Copy .env.example to .env.local, fill in your Supabase URL, anon key and Anthropic API key, then restart the dev server."
+          ? "Copy .env.example to .env.local, fill in your Supabase URL, anon key and GEMINI_API_KEY, then restart the dev server."
           : "An unexpected error occurred. Your data is safe — try again."}
       </p>
       {!isConfig ? (

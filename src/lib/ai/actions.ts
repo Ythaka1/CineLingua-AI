@@ -1,10 +1,10 @@
 "use server";
 
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import { z } from "zod";
 
-import { AI_MODEL, getAnthropic } from "@/lib/ai/anthropic";
 import { buildCacheKey } from "@/lib/ai/cache-key";
 import { cacheGet, cachePut } from "@/lib/ai/cache";
+import { AI_MODEL, getGemini, parseJsonResponse, toGeminiJsonSchema } from "@/lib/ai/gemini";
 import { wordSystemPrompt, wordUserPrompt } from "@/lib/ai/prompts";
 import {
   cefrLevelSchema,
@@ -17,7 +17,6 @@ import {
   type WordExplanation,
 } from "@/lib/ai/schemas";
 import { createClient } from "@/lib/supabase/server";
-import { z } from "zod";
 
 export interface ExplainWordResult {
   ok: true;
@@ -61,19 +60,18 @@ export async function explainWord(
   }
 
   try {
-    const message = await getAnthropic().messages.parse({
+    const response = await getGemini().models.generateContent({
       model: AI_MODEL,
-      max_tokens: 2048,
-      system: wordSystemPrompt(input),
-      messages: [{ role: "user", content: wordUserPrompt(input) }],
-      output_config: { format: zodOutputFormat(wordExplanationSchema) },
+      contents: wordUserPrompt(input),
+      config: {
+        systemInstruction: wordSystemPrompt(input),
+        responseMimeType: "application/json",
+        responseJsonSchema: toGeminiJsonSchema(wordExplanationSchema),
+        maxOutputTokens: 4096,
+      },
     });
 
-    if (message.stop_reason === "refusal" || !message.parsed_output) {
-      return { ok: false, error: "The tutor couldn't explain this one. Try again." };
-    }
-
-    const explanation = wordExplanationSchema.parse(message.parsed_output);
+    const explanation = wordExplanationSchema.parse(parseJsonResponse(response.text));
     await cachePut(supabase, key, explanation);
     return { ok: true, explanation, cached: false };
   } catch (err) {
@@ -136,18 +134,18 @@ export async function detectIdioms(
   }
 
   try {
-    const message = await getAnthropic().messages.parse({
+    const response = await getGemini().models.generateContent({
       model: AI_MODEL,
-      max_tokens: 2048,
-      system:
-        "You detect German idioms and fixed expressions in film subtitles for a language learner. Only report genuine idioms, collocational fixed expressions, or figurative set phrases actually present in the given lines — never invent, never include plain literal sentences. If there are none, return an empty list. Quote each phrase exactly as it appears.",
-      messages: [{ role: "user", content: `Subtitles from the scene:\n${sceneText}` }],
-      output_config: { format: zodOutputFormat(idiomListSchema) },
+      contents: `Subtitles from the scene:\n${sceneText}`,
+      config: {
+        systemInstruction:
+          "You detect German idioms and fixed expressions in film subtitles for a language learner. Only report genuine idioms, collocational fixed expressions, or figurative set phrases actually present in the given lines — never invent, never include plain literal sentences. If there are none, return an empty list. Quote each phrase exactly as it appears.",
+        responseMimeType: "application/json",
+        responseJsonSchema: toGeminiJsonSchema(idiomListSchema),
+        maxOutputTokens: 4096,
+      },
     });
-    if (message.stop_reason === "refusal" || !message.parsed_output) {
-      return { ok: false, error: "Idiom scan failed. Try again." };
-    }
-    const list = idiomListSchema.parse(message.parsed_output);
+    const list = idiomListSchema.parse(parseJsonResponse(response.text));
     await cachePut(supabase, key, list);
     return { ok: true, idioms: list.idioms, cached: false };
   } catch (err) {

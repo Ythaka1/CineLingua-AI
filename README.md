@@ -10,14 +10,14 @@ register, nuance, and how Germans actually phrase it → save it → review it.*
 
 - Next.js 15 (App Router), React 19, TypeScript (strict), Tailwind CSS v4, Motion
 - Supabase (Postgres + Auth) — migrations in `supabase/migrations/`, RLS on everything user-owned
-- Anthropic Claude (official SDK), server-side only, Zod-validated at every boundary
+- Google Gemini 2.5 Flash (official `@google/genai` SDK), server-side only, Zod-validated at every boundary
 - HTML5 video + user-supplied local files with imported `.srt`/`.vtt` subtitles (v1)
 
 ## Setup
 
 ```bash
 npm install
-cp .env.example .env.local   # fill in Supabase + Anthropic keys
+cp .env.example .env.local   # fill in Supabase keys + GEMINI_API_KEY
 npm run dev
 ```
 

@@ -18,7 +18,7 @@ function SetupScreen() {
         <p>
           2. Fill in <code className="rounded bg-white/[0.07] px-1">NEXT_PUBLIC_SUPABASE_URL</code>,{" "}
           <code className="rounded bg-white/[0.07] px-1">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> and{" "}
-          <code className="rounded bg-white/[0.07] px-1">ANTHROPIC_API_KEY</code>
+          <code className="rounded bg-white/[0.07] px-1">GEMINI_API_KEY</code>
         </p>
         <p>
           3. Apply the SQL in <code className="rounded bg-white/[0.07] px-1">supabase/migrations/</code>{" "}
